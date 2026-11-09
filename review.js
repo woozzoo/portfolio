@@ -1,4 +1,6 @@
-/* 화면 코멘트 — tools/serve_review.py 로 띄웠을 때만 나타난다.
+/* 화면 코멘트 — tools/serve_review.py 로 띄웠을 때, 또는 공개본 주소에 ?review 를 붙여 열었을 때(손님 모드) 나타난다.
+   손님 모드: 코멘트는 그 사람 브라우저(localStorage)에 저장되고, [보내기]로 복사·내려받아 전달한다.
+   받은 파일은 tools/import_guest.py 로 feedback/comments.json 에 합친다.
    [코멘트 남기기]를 켜고 누르면 점 핀, 끌면 영역 코멘트. 저장은 feedback/comments.json.
    위치: x·w = 문서 폭 비율, y·h = 문서 맨 위에서 px. vw = 남길 때 창 폭. */
 (function () {
@@ -6,7 +8,17 @@
   const API = '/api/comments';
   const ST = { open: '열림', req: '수정 요청', done: '반영됨', hold: '보류' };
   const S = { items: [], mode: false, show: true, panel: false, hideDone: false, allPages: false, pop: null, drag: null };
-  const page = location.pathname.replace(/\/index\.html$/, '/');
+  const LOCAL = /^(127\.0\.0\.1|localhost)$/.test(location.hostname);
+  /* 손님 모드 표시는 그 탭에서만 유지한다(사례 페이지를 오갈 때). 탭을 닫고 일반 주소로 오면 나오지 않는다 */
+  if (!LOCAL && /[?&]review\b/.test(location.search)) try { sessionStorage.setItem('rv-guest', '1'); } catch (x) {}
+  /* 로컬에서는 주소에 ?review 가 있을 때만 손님 모드(시험용), 공개본에서는 한 번 들어오면 다른 페이지에서도 유지 */
+  const GUEST = LOCAL ? /[?&]review\b/.test(location.search) : (() => { try { return sessionStorage.getItem('rv-guest') === '1'; } catch (x) { return false; } })();
+  const KEY = 'rv-guest-items';
+  /* 공개본은 /portfolio/ 아래에 있으므로 페이지 경로를 사이트 기준으로 맞춘다 */
+  const root = (document.currentScript && document.currentScript.src || '').replace(/review\.js.*$/, '');
+  const rootPath = root ? new URL(root).pathname : '/';
+  const page = ('/' + location.pathname.slice(rootPath.length)).replace(/\/index\.html$/, '/');
+  const pageUrl = pg => rootPath.replace(/\/$/, '') + pg;
 
   function el(tag, attrs, kids) {
     const n = document.createElement(tag);
@@ -20,7 +32,28 @@
     (kids || []).forEach(c => c != null && n.appendChild(typeof c === 'string' ? document.createTextNode(c) : c));
     return n;
   }
+  /* 손님 모드 저장소: 서버 API 와 같은 모양으로 답한다 */
+  function gload() { try { return JSON.parse(localStorage.getItem(KEY) || '[]'); } catch (x) { return []; } }
+  function gsave(a) { localStorage.setItem(KEY, JSON.stringify(a)); }
+  function guestCall(method, url, body) {
+    const a = gload(), id = (url.match(/\/(g\d+)$/) || [])[1];
+    if (method === 'GET') return a;
+    if (method === 'POST') {
+      const n = a.reduce((m, c) => Math.max(m, +c.id.slice(1) || 0), 0) + 1;
+      const c = { ...body, id: 'g' + String(n).padStart(3, '0'), status: 'open', at: new Date().toISOString(), author: guestName() };
+      a.push(c); gsave(a); return c;
+    }
+    const i = a.findIndex(c => c.id === id); if (i < 0) throw new Error('없음');
+    if (method === 'PATCH') { if (body.text != null && !String(body.text).trim()) throw new Error('내용이 비었습니다'); Object.assign(a[i], body, { updated: new Date().toISOString() }); gsave(a); return a[i]; }
+    if (method === 'DELETE') { a.splice(i, 1); gsave(a); return { ok: true }; }
+  }
+  function guestName() {
+    let n = ''; try { n = localStorage.getItem('rv-guest-name') || ''; } catch (x) {}
+    if (!n) { n = (prompt('코멘트에 남길 이름을 적어 주세요.') || '').trim() || '손님'; try { localStorage.setItem('rv-guest-name', n); } catch (x) {} }
+    return n;
+  }
   async function call(method, url, body) {
+    if (GUEST) return guestCall(method, url, body);
     const r = await fetch(url, { method, headers: { 'Content-Type': 'application/json' }, body: body ? JSON.stringify(body) : undefined });
     if (!r.ok) throw new Error(r.status);
     return r.json();
@@ -90,7 +123,7 @@
     } });
     btnList = el('button', { type: 'button', 'aria-expanded': 'false', onclick: togglePanel });
     btnShow = el('button', { type: 'button', 'aria-pressed': 'true', onclick: () => { S.show = !S.show; btnShow.setAttribute('aria-pressed', S.show); btnShow.textContent = S.show ? '핀 숨기기' : '핀 보기'; render(); }, text: '핀 숨기기' });
-    bar = el('div', { id: 'rv-bar' }, [btnShow, btnList, btnMode]);
+    bar = el('div', { id: 'rv-bar' }, GUEST ? [btnShow, btnList, el('button', { type: 'button', text: '보내기', onclick: sendOut }), btnMode] : [btnShow, btnList, btnMode]);
     document.body.appendChild(bar);
     addEventListener('resize', render);
     addEventListener('keydown', e => {
@@ -181,7 +214,7 @@
         Object.assign(area.style, { left: p.x + 'px', top: p.y + 'px', width: p.w + 'px', height: p.h + 'px' });
         layer.appendChild(area);
       }
-      const pin = el('button', { type: 'button', class: 'rv-pin ' + c.status, 'data-id': c.id, 'aria-label': `코멘트 ${c.id} ${ST[c.status]}`, text: c.id.replace(/^c0*/, '') });
+      const pin = el('button', { type: 'button', class: 'rv-pin ' + c.status, 'data-id': c.id, 'aria-label': `코멘트 ${c.id} ${ST[c.status]}`, text: c.id.replace(/^[cg]0*/, '') });
       Object.assign(pin.style, { left: (p.w ? p.x + p.w : p.x) + 'px', top: p.y + 'px' });
       if (area) {
         pin.addEventListener('mouseenter', () => area.classList.add('on'));
@@ -258,6 +291,29 @@
     node.querySelector('button').focus();
   }
 
+  /* ---------- 손님 모드: 보내기 ---------- */
+  function sendOut() {
+    if (S.mode) setMode(false);
+    const items = gload();
+    const out = JSON.stringify({ from: (localStorage.getItem('rv-guest-name') || '손님'), site: location.origin + rootPath, at: new Date().toISOString(), items }, null, 1);
+    closePop();
+    const msg = el('div', { class: 'rv-txt', text: items.length ? `코멘트 ${items.length}건을 보냅니다. [복사]한 뒤 카카오톡 등에 붙여 넣거나, [파일 받기]로 내려받은 파일을 보내 주세요.` : '아직 남긴 코멘트가 없습니다.' });
+    const err = el('div', { class: 'rv-err', role: 'status' });
+    const row = el('div', { class: 'rv-row' }, [
+      el('button', { type: 'button', text: '닫기', onclick: closePop }),
+      el('button', { type: 'button', text: '파일 받기', onclick: () => {
+        const a = el('a', { href: URL.createObjectURL(new Blob([out], { type: 'application/json' })), download: '포트폴리오_코멘트.json' });
+        document.body.appendChild(a); a.click(); a.remove(); err.textContent = '내려받았습니다.';
+      } }),
+      el('button', { type: 'button', class: 'rv-pri', text: '복사', onclick: async () => {
+        try { await navigator.clipboard.writeText(out); err.textContent = '복사했습니다. 붙여 넣어 보내 주세요.'; }
+        catch (x) { err.textContent = '복사하지 못했습니다. [파일 받기]를 써 주세요.'; }
+      } })]);
+    const node = el('div', { class: 'rv-pop', role: 'dialog', 'aria-label': '코멘트 보내기' }, [el('div', { class: 'rv-meta', text: '보내기' }), msg, err, row]);
+    S.pop = { id: null, node, opener: null, at: { x: docW() - 330, y: scrollY + innerHeight - 260 } };
+    placePop(); node.querySelector('.rv-pri').focus();
+  }
+
   /* ---------- 목록 ---------- */
   function togglePanel() { S.panel = !S.panel; btnList.setAttribute('aria-expanded', S.panel); renderPanel(); }
   const pageName = pg => pg === '/' ? '메인' : pg.replace(/^\/cases\//, '사례 · ').replace(/\.html$/, '');
@@ -275,7 +331,7 @@
     const pages = [...new Set(list.map(c => c.page))].sort((a, b) => (b === page) - (a === page));
     pages.forEach(pg => {
       if (S.allPages) p.appendChild(el('div', { class: 'rv-g', text: pageName(pg) + (pg === page ? ' (지금)' : '') }));
-      list.filter(c => c.page === pg).forEach(c => p.appendChild(el('a', { href: c.page + '#rv=' + c.id, onclick: e => { if (c.page === page) { e.preventDefault(); jump(c.id); } } }, [
+      list.filter(c => c.page === pg).forEach(c => p.appendChild(el('a', { href: pageUrl(c.page) + '#rv=' + c.id, onclick: e => { if (c.page === page) { e.preventDefault(); jump(c.id); } } }, [
         el('div', { class: 'rv-p', text: `${c.id} · ${ST[c.status]}${viewName(c)}` }), el('div', { class: 'rv-t', text: c.text })])));
     });
   }
@@ -288,11 +344,20 @@
   }
 
   /* ---------- 시작: 서버가 있을 때만 ---------- */
-  if (!/^(127\.0\.0\.1|localhost)$/.test(location.hostname)) return; /* 배포본에서는 요청하지 않는다 */
-  fetch(API, { cache: 'no-store' }).then(r => r.ok ? r.json() : Promise.reject()).then(items => {
+  if (!LOCAL && !GUEST) return; /* 배포본에서는 ?review 로 연 손님만 쓴다(서버 요청 없음) */
+  (GUEST ? Promise.resolve(gload()) : fetch(API, { cache: 'no-store' }).then(r => r.ok ? r.json() : Promise.reject())).then(items => {
     if (!Array.isArray(items)) return;
     S.items = items; mount(); render();
-    const m = location.hash.match(/rv=(c\d+)/);
+    if (GUEST && !localStorage.getItem('rv-guest-seen')) { /* 손님 첫 방문: 쓰는 법 한 번 보여 준다 */
+      localStorage.setItem('rv-guest-seen', '1');
+      const node = el('div', { class: 'rv-pop', role: 'dialog', 'aria-label': '코멘트 남기는 법' }, [
+        el('div', { class: 'rv-meta', text: '코멘트 남기는 법' }),
+        el('div', { class: 'rv-txt', text: '1. 오른쪽 아래 [코멘트 남기기](또는 C키)를 켭니다.\n2. 고칠 곳을 누르면 점, 끌면 영역 코멘트가 됩니다.\n3. 핀을 누르면 고치기·삭제할 수 있습니다. 사례 페이지를 오가며 남겨도 됩니다.\n4. 다 남기면 [보내기]에서 복사하거나 파일로 받아 전해 주세요.\n코멘트는 이 브라우저에만 저장됩니다.' }),
+        el('div', { class: 'rv-row' }, [el('button', { type: 'button', class: 'rv-pri', text: '알겠어요', onclick: closePop })])]);
+      S.pop = { id: null, node, opener: null, at: { x: docW() - 330, y: scrollY + innerHeight - 330 } };
+      placePop(); node.querySelector('button').focus();
+    }
+    const m = location.hash.match(/rv=([cg]\d+)/);
     if (m) setTimeout(() => jump(m[1]), 400); /* 이미지가 자리 잡은 뒤 */
   }).catch(() => { /* 정적 배포본: 코멘트 없음 */ });
 })();
