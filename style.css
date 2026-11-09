@@ -58,7 +58,9 @@ img{display:block;max-width:100%}
 .hero .word{top:27%;font-size:17.6cqw;--b1:14%;--b2:36%;--c1:50%;--c2:70%}
 .hero.live .word{--b1:9%;--b2:22%;--c1:32%;--c2:46%}
 @media (prefers-reduced-motion:reduce){.hero.live{animation:none}}
-.hero .base{top:calc(27% + 15.05cqw)}
+.hero .base{top:calc(27% + 15.175cqw)}
+/* 기준선은 글자 바탕선(Bodoni Moda 17.6cqw 의 바탕선 = 글자 위 15.175cqw)에 맞추고 정수 px 로 내림 없이 올림해 획을 가로지르지 않게 한다 */
+@supports (top:round(up,1px,1px)){.hero .base{top:round(up,calc(27% + 15.175cqw),1px)}}
 .hero .ko{top:calc(27% + 18.3cqw)}
 
 /* ── 사례 탭 + 목록 ── */
@@ -148,7 +150,8 @@ img{display:block;max-width:100%}
 
  .hero{aspect-ratio:4/5;--sweep:60cqw}
  .hero .word{top:36%;font-size:17.6cqw}
- .hero .base{top:calc(36% + 15.05cqw)}
+ .hero .base{top:calc(36% + 15.175cqw)}
+ @supports (top:round(up,1px,1px)){.hero .base{top:round(up,calc(36% + 15.175cqw),1px)}}
  .hero .ko{top:calc(36% + 19cqw);font-size:4.4cqw;right:var(--col)}
  .cv .m{font-size:2.9cqw}.cv .m b{font-size:4.2cqw}
  .cv .tl,.cv .tr{top:6%}.cv .bl,.cv .br{bottom:6%}
