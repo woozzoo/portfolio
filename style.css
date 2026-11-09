@@ -17,7 +17,11 @@ img{display:block;max-width:100%}
   background:radial-gradient(closest-side at 62% 34%,var(--g1),transparent),radial-gradient(closest-side at 40% 70%,var(--g2),transparent),
   radial-gradient(closest-side at 74% 80%,var(--g3),transparent),radial-gradient(closest-side at 34% 22%,#F4C59A,transparent);
   -webkit-mask-image:linear-gradient(90deg,#000 45%,transparent 100%);mask-image:linear-gradient(90deg,#000 45%,transparent 100%)}
-.cv .ticks{left:0;right:0;height:.8cqw;background:repeating-linear-gradient(90deg,var(--ink) 0 1px,transparent 1px var(--col));opacity:.6}
+/* 눈금: 반복 그라데이션은 칸 폭이 소수 px 이면 큰 화면에서 선이 사라져, 칸마다 1px 막대를 따로 둔다 */
+.cv .ticks{left:0;right:0;height:max(8px,.8cqw);opacity:.6}
+.cv .ticks i{position:absolute;top:0;bottom:0;left:round(calc(var(--col)*var(--i)),1px);width:1px;background:var(--ink)}
+@supports not (width:round(1px,1px)){.cv .ticks i{left:calc(var(--col)*var(--i))}}
+.cv .ticks i:last-child{left:auto;right:0}
 .cv .ticks.t{top:1.5cqw}.cv .ticks.b{bottom:1.5cqw}
 .cv .m{font-family:"IBM Plex Mono",var(--mono);font-size:1.2cqw;letter-spacing:.08em;text-transform:uppercase;line-height:1.55}
 .cv .m b{display:block;font-family:var(--sans);font-weight:600;font-size:1.6cqw;letter-spacing:.01em;text-transform:none}
