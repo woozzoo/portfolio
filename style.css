@@ -159,3 +159,28 @@ img{display:block;max-width:100%}
  .step{grid-template-columns:1fr;gap:20px}.sh{position:static}
  .shots.n3,.shots.n4{grid-template-columns:repeat(2,1fr)}
 }
+
+/* ── 이전·다음 사례 ── */
+.pager{grid-column:1/-1;display:grid;grid-template-columns:1fr 1fr;gap:24px;border-top:1px solid var(--ink);margin-top:80px}
+.pager .nextcase{all:unset;cursor:pointer;display:block;padding:40px 0 80px;font-size:clamp(28px,4vw,56px);font-weight:800;letter-spacing:-.05em;line-height:1.1}
+.pager .nextcase:not(.prev){text-align:right}
+.pager .nextcase .mono{display:block;color:var(--dim);margin-bottom:12px;font-weight:400}
+.pager .nextcase:hover{opacity:.6}
+.pager .nextcase:focus-visible{outline:2px solid var(--ink);outline-offset:4px}
+.about .contact{margin-top:40px;display:flex;gap:16px;align-items:baseline;font-size:20px}
+.about .contact .mono{color:var(--dim)}
+.g{position:relative}
+.g .badge{position:absolute;top:10px;left:10px;font:500 11px/1 var(--mono);letter-spacing:.06em;font-style:normal;background:var(--ink);color:#fff;padding:6px 8px;border-radius:999px}
+.g small{font-size:12px;color:var(--dim);line-height:1.5;margin-top:-6px}
+/* 대표 목업·작게 보기 (2026-11-09) */
+.pshots.one{grid-template-columns:1fr}
+.pshots figure.mock{background:none;border:0;border-radius:12px;max-height:none}
+.step.mock .shots{max-width:620px}
+.step.mock .shot,.step.small .shot{border:0;background:none}
+.shots.n1 .shot.tall{max-width:300px}
+.shots.n1 .shot.tall img{max-height:none}
+@media (max-width:900px){.pshots.one{grid-template-columns:1fr}}
+.g img{aspect-ratio:4/3;object-fit:contain;background:#F3F2EF}
+.lb img{max-width:min(1100px,100%)}
+.step.small .shot img{width:auto;max-width:100%;max-height:760px;object-fit:cover;object-position:top}
+.pshots figure.mock img{max-height:520px;width:100%;object-fit:contain;background:#F3F2EF}

@@ -24,17 +24,21 @@
  </div>
  <p class="mono label">PROCESS</p>
  <section class="step"><div class="sh"><span class="mono">01</span><h3>흐름도</h3><p>네 콘솔이 주고받는 서비스 흐름도(25-09판).</p></div>
-<div class="shots n1"><a class="shot " href="../img/iposture_1_1.jpg" data-full="../img/iposture_1_1.jpg"><img src="../img/iposture_1_1.jpg" alt="" loading="lazy"></a></div></section><section class="step"><div class="sh"><span class="mono">02</span><h3>회원 연동 정책 변경 요약</h3><p>SAC 와이어 변경 요약: 회원 이용권을 없애고 트레이너 ↔ 회원 앱 연동으로 통일.</p></div>
-<div class="shots n1"><a class="shot " href="../img/iposture_2_1.jpg" data-full="../img/iposture_2_1.jpg"><img src="../img/iposture_2_1.jpg" alt="" loading="lazy"></a></div></section><section class="step"><div class="sh"><span class="mono">03</span><h3>센터 이용권</h3><p>센터 이용권 구매(요금제). 대시보드·트레이너 일정 관리는 이름 가림 뒤 추가.</p></div>
-<div class="shots n1"><a class="shot " href="../img/iposture_3_1.jpg" data-full="../img/iposture_3_1.jpg"><img src="../img/iposture_3_1.jpg" alt="" loading="lazy"></a></div></section><section class="step"><div class="sh"><span class="mono">04</span><h3>사용자 앱</h3><p>컨셉 → 홈 → 전신기능검사 리포트 → 식단 트레이너 피드백.</p></div>
-<div class="shots n4"><a class="shot tall" href="../img/iposture_4_1.jpg" data-full="../img/iposture_4_1.jpg"><img src="../img/iposture_4_1.jpg" alt="" loading="lazy"></a><a class="shot tall" href="../img/iposture_4_2.jpg" data-full="../img/iposture_4_2.jpg"><img src="../img/iposture_4_2.jpg" alt="" loading="lazy"></a><a class="shot tall" href="../img/iposture_4_3.jpg" data-full="../img/iposture_4_3.jpg"><img src="../img/iposture_4_3.jpg" alt="" loading="lazy"></a><a class="shot tall" href="../img/iposture_4_4.jpg" data-full="../img/iposture_4_4.jpg"><img src="../img/iposture_4_4.jpg" alt="" loading="lazy"></a></div></section>
- <a class="nextcase" href="duit.html"><span class="mono">NEXT CASE</span>두잇 →</a>
+<div class="shots n1"><a class="shot " href="../img/iposture_1_1.jpg" data-full="../img/iposture_1_1.jpg" aria-label="흐름도 화면 크게 보기"><img src="../img/iposture_1_1.jpg" alt="" loading="lazy"></a></div></section><section class="step small"><div class="sh"><span class="mono">02</span><h3>PRD</h3><p>사용자 앱 요청사항 취합 PRD(노션): 구독 모델, 신청서·상담일지 기능.</p></div>
+<div class="shots n1"><a class="shot tall" href="../img/iposture_2_s.jpg" data-full="../img/iposture_2_s.jpg" aria-label="PRD 화면 크게 보기"><img src="../img/iposture_2_s.jpg" alt="" loading="lazy"></a></div></section><section class="step small"><div class="sh"><span class="mono">03</span><h3>센터 웹</h3><p>센터 페이지 최종 디자인 전체.</p></div>
+<div class="shots n1"><a class="shot " href="../img/iposture_3_s.jpg" data-full="../img/iposture_3_s.jpg" aria-label="센터 웹 화면 크게 보기"><img src="../img/iposture_3_s.jpg" alt="" loading="lazy"></a></div></section><section class="step small"><div class="sh"><span class="mono">04</span><h3>트레이너 웹</h3><p>트레이너 최종 시안: 로그인·회원가입, 대시보드, 회원 관리.</p></div>
+<div class="shots n1"><a class="shot " href="../img/iposture_4_s.jpg" data-full="../img/iposture_4_s.jpg" aria-label="트레이너 웹 화면 크게 보기"><img src="../img/iposture_4_s.jpg" alt="" loading="lazy"></a></div></section><section class="step small"><div class="sh"><span class="mono">05</span><h3>통합 관리자(SAC)</h3><p>SAC 디자인과 수정 후 화면.</p></div>
+<div class="shots n1"><a class="shot " href="../img/iposture_5_s.jpg" data-full="../img/iposture_5_s.jpg" aria-label="통합 관리자(SAC) 화면 크게 보기"><img src="../img/iposture_5_s.jpg" alt="" loading="lazy"></a></div></section><section class="step small"><div class="sh"><span class="mono">06</span><h3>사용자 앱</h3><p>최종 화면 전체: 홈, 전신기능검사 리포트, 식단 트레이너 피드백, 이용권.</p></div>
+<div class="shots n1"><a class="shot wide" href="../img/iposture_6_s.jpg" data-full="../img/iposture_6_s.jpg" aria-label="사용자 앱 화면 크게 보기"><img src="../img/iposture_6_s.jpg" alt="" loading="lazy"></a></div></section>
+ <nav class="pager" aria-label="다른 사례"><a class="nextcase prev" href="dongsuh.html"><span class="mono">← PREV CASE</span>동서식품</a><a class="nextcase" href="duit.html"><span class="mono">NEXT CASE →</span>두잇</a></nav>
 </main>
-<div class="lb" id="lb" hidden><img alt=""><button aria-label="닫기">닫기</button></div>
+<div class="lb" id="lb" role="dialog" aria-modal="true" aria-label="화면 크게 보기" hidden><img alt=""><button type="button">닫기</button></div>
 <script>
-const lb=document.getElementById('lb'),li=lb.querySelector('img');
+/* 크게 보기: 열 때 닫기 버튼으로 초점, 닫으면 누른 자리로 초점 복귀, 안에서만 Tab 순환 */
+const lb=document.getElementById('lb'),li=lb.querySelector('img'),lbBtn=lb.querySelector('button');let lbFrom=null;
+function lbClose(){lb.hidden=true;li.src='';document.body.style.overflow='';if(lbFrom)lbFrom.focus()}
 document.addEventListener('click',e=>{const a=e.target.closest('[data-full]');
- if(a){e.preventDefault();li.src=a.dataset.full;lb.hidden=false;document.body.style.overflow='hidden';return}
- if(!lb.hidden&&(e.target===lb||e.target.tagName==='BUTTON')){lb.hidden=true;li.src='';document.body.style.overflow=''}});
-document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!lb.hidden){lb.hidden=true;document.body.style.overflow=''}});
+ if(a){e.preventDefault();lbFrom=a;li.src=a.dataset.full;lb.hidden=false;document.body.style.overflow='hidden';lbBtn.focus();return}
+ if(!lb.hidden&&(e.target===lb||e.target===lbBtn))lbClose()});
+document.addEventListener('keydown',e=>{if(lb.hidden)return;if(e.key==='Escape')lbClose();else if(e.key==='Tab'){e.preventDefault();lbBtn.focus()}});
 </script></body></html>

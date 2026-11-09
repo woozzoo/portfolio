@@ -24,16 +24,21 @@
  </div>
  <p class="mono label">PROCESS</p>
  <section class="step"><div class="sh"><span class="mono">01</span><h3>메뉴 구조</h3><p>최초 메뉴구조도(SAC).</p></div>
-<div class="shots n1"><a class="shot tall" href="../img/solum_1_1.jpg" data-full="../img/solum_1_1.jpg"><img src="../img/solum_1_1.jpg" alt="" loading="lazy"></a></div></section><section class="step"><div class="sh"><span class="mono">02</span><h3>컨셉</h3><p>컬러 정의.</p></div>
-<div class="shots n1"><a class="shot wide" href="../img/solum_2_1.jpg" data-full="../img/solum_2_1.jpg"><img src="../img/solum_2_1.jpg" alt="" loading="lazy"></a></div></section><section class="step"><div class="sh"><span class="mono">03</span><h3>콘솔 디자인</h3><p>로그인, 장치 상세·스케줄, 라이선스.</p></div>
-<div class="shots n3"><a class="shot wide" href="../img/solum_3_1.jpg" data-full="../img/solum_3_1.jpg"><img src="../img/solum_3_1.jpg" alt="" loading="lazy"></a><a class="shot " href="../img/solum_3_2.jpg" data-full="../img/solum_3_2.jpg"><img src="../img/solum_3_2.jpg" alt="" loading="lazy"></a><a class="shot " href="../img/solum_3_3.jpg" data-full="../img/solum_3_3.jpg"><img src="../img/solum_3_3.jpg" alt="" loading="lazy"></a></div></section>
- <a class="nextcase" href="hanwoori.html"><span class="mono">NEXT CASE</span>한우리 →</a>
+<div class="shots n1"><a class="shot tall" href="../img/solum_1_1.jpg" data-full="../img/solum_1_1.jpg" aria-label="메뉴 구조 화면 크게 보기"><img src="../img/solum_1_1.jpg" alt="" loading="lazy"></a></div></section><section class="step small"><div class="sh"><span class="mono">02</span><h3>IA</h3><p>3차 섹션별 기획 확정사항: 메뉴 확정 항목, 계정 구조, 라이선스.</p></div>
+<div class="shots n1"><a class="shot wide" href="../img/solum_2_s.jpg" data-full="../img/solum_2_s.jpg" aria-label="IA 화면 크게 보기"><img src="../img/solum_2_s.jpg" alt="" loading="lazy"></a></div></section><section class="step small"><div class="sh"><span class="mono">03</span><h3>흐름도</h3><p>관리자 콘솔 흐름도.</p></div>
+<div class="shots n1"><a class="shot " href="../img/solum_3_s.jpg" data-full="../img/solum_3_s.jpg" aria-label="흐름도 화면 크게 보기"><img src="../img/solum_3_s.jpg" alt="" loading="lazy"></a></div></section><section class="step small"><div class="sh"><span class="mono">04</span><h3>기능 정의 · 와이어</h3><p>ASAC 포함 최종 기획: SAC·RMS·CMS 화면별 기능 정의와 2·3차 확정 사항.</p></div>
+<div class="shots n1"><a class="shot " href="../img/solum_4_s.jpg" data-full="../img/solum_4_s.jpg" aria-label="기능 정의 · 와이어 화면 크게 보기"><img src="../img/solum_4_s.jpg" alt="" loading="lazy"></a></div></section><section class="step"><div class="sh"><span class="mono">05</span><h3>컨셉</h3><p>컬러 정의.</p></div>
+<div class="shots n1"><a class="shot wide" href="../img/solum_5_1.jpg" data-full="../img/solum_5_1.jpg" aria-label="컨셉 화면 크게 보기"><img src="../img/solum_5_1.jpg" alt="" loading="lazy"></a></div></section><section class="step"><div class="sh"><span class="mono">06</span><h3>콘솔 디자인</h3><p>로그인, 장치 상세·스케줄, 라이선스.</p></div>
+<div class="shots n3"><a class="shot wide" href="../img/solum_6_1.jpg" data-full="../img/solum_6_1.jpg" aria-label="콘솔 디자인 화면 크게 보기"><img src="../img/solum_6_1.jpg" alt="" loading="lazy"></a><a class="shot " href="../img/solum_6_2.jpg" data-full="../img/solum_6_2.jpg" aria-label="콘솔 디자인 화면 크게 보기"><img src="../img/solum_6_2.jpg" alt="" loading="lazy"></a><a class="shot " href="../img/solum_6_3.jpg" data-full="../img/solum_6_3.jpg" aria-label="콘솔 디자인 화면 크게 보기"><img src="../img/solum_6_3.jpg" alt="" loading="lazy"></a></div></section>
+ <nav class="pager" aria-label="다른 사례"><a class="nextcase prev" href="kaspa.html"><span class="mono">← PREV CASE</span>카스파</a><a class="nextcase" href="hanwoori.html"><span class="mono">NEXT CASE →</span>한우리</a></nav>
 </main>
-<div class="lb" id="lb" hidden><img alt=""><button aria-label="닫기">닫기</button></div>
+<div class="lb" id="lb" role="dialog" aria-modal="true" aria-label="화면 크게 보기" hidden><img alt=""><button type="button">닫기</button></div>
 <script>
-const lb=document.getElementById('lb'),li=lb.querySelector('img');
+/* 크게 보기: 열 때 닫기 버튼으로 초점, 닫으면 누른 자리로 초점 복귀, 안에서만 Tab 순환 */
+const lb=document.getElementById('lb'),li=lb.querySelector('img'),lbBtn=lb.querySelector('button');let lbFrom=null;
+function lbClose(){lb.hidden=true;li.src='';document.body.style.overflow='';if(lbFrom)lbFrom.focus()}
 document.addEventListener('click',e=>{const a=e.target.closest('[data-full]');
- if(a){e.preventDefault();li.src=a.dataset.full;lb.hidden=false;document.body.style.overflow='hidden';return}
- if(!lb.hidden&&(e.target===lb||e.target.tagName==='BUTTON')){lb.hidden=true;li.src='';document.body.style.overflow=''}});
-document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!lb.hidden){lb.hidden=true;document.body.style.overflow=''}});
+ if(a){e.preventDefault();lbFrom=a;li.src=a.dataset.full;lb.hidden=false;document.body.style.overflow='hidden';lbBtn.focus();return}
+ if(!lb.hidden&&(e.target===lb||e.target===lbBtn))lbClose()});
+document.addEventListener('keydown',e=>{if(lb.hidden)return;if(e.key==='Escape')lbClose();else if(e.key==='Tab'){e.preventDefault();lbBtn.focus()}});
 </script></body></html>
