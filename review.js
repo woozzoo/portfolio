@@ -1,6 +1,6 @@
 /* 화면 코멘트 — tools/serve_review.py 로 띄웠을 때, 또는 공개본 주소에 ?review 를 붙여 열었을 때(손님 모드) 나타난다.
-   손님 모드: 코멘트는 그 사람 브라우저(localStorage)에 저장되고, [보내기]로 복사·내려받아 전달한다.
-   받은 파일은 tools/import_guest.py 로 feedback/comments.json 에 합친다.
+   손님 모드: 코멘트는 개인 Supabase(portfolio-comments)에 바로 저장된다. 손님은 브라우저마다 만든 표식으로 자기 코멘트만 보고 고친다.
+   로컬 서버(tools/serve_review.py)가 주기적으로 받아 feedback/comments.json 에 합친다(tools/guest_sync.py). 표·함수: tools/guest_comments.sql
    [코멘트 남기기]를 켜고 누르면 점 핀, 끌면 영역 코멘트. 저장은 feedback/comments.json.
    위치: x·w = 문서 폭 비율, y·h = 문서 맨 위에서 px. vw = 남길 때 창 폭. */
 (function () {
@@ -13,7 +13,6 @@
   if (!LOCAL && /[?&]review\b/.test(location.search)) try { sessionStorage.setItem('rv-guest', '1'); } catch (x) {}
   /* 로컬에서는 주소에 ?review 가 있을 때만 손님 모드(시험용), 공개본에서는 한 번 들어오면 다른 페이지에서도 유지 */
   const GUEST = LOCAL ? /[?&]review\b/.test(location.search) : (() => { try { return sessionStorage.getItem('rv-guest') === '1'; } catch (x) { return false; } })();
-  const KEY = 'rv-guest-items';
   /* 공개본은 /portfolio/ 아래에 있으므로 페이지 경로를 사이트 기준으로 맞춘다 */
   const root = (document.currentScript && document.currentScript.src || '').replace(/review\.js.*$/, '');
   const rootPath = root ? new URL(root).pathname : '/';
@@ -32,20 +31,46 @@
     (kids || []).forEach(c => c != null && n.appendChild(typeof c === 'string' ? document.createTextNode(c) : c));
     return n;
   }
-  /* 손님 모드 저장소: 서버 API 와 같은 모양으로 답한다 */
-  function gload() { try { return JSON.parse(localStorage.getItem(KEY) || '[]'); } catch (x) { return []; } }
-  function gsave(a) { localStorage.setItem(KEY, JSON.stringify(a)); }
-  function guestCall(method, url, body) {
-    const a = gload(), id = (url.match(/\/(g\d+)$/) || [])[1];
-    if (method === 'GET') return a;
-    if (method === 'POST') {
-      const n = a.reduce((m, c) => Math.max(m, +c.id.slice(1) || 0), 0) + 1;
-      const c = { ...body, id: 'g' + String(n).padStart(3, '0'), status: 'open', at: new Date().toISOString(), author: guestName() };
-      a.push(c); gsave(a); return c;
+  /* 손님 모드 저장소: 개인 Supabase 의 함수(cm_*)로만 읽고 쓴다. 공개 키는 브라우저용으로 공개해도 되는 키다 */
+  const SB = 'https://mppwxihdcvspdebtdgce.supabase.co/rest/v1/rpc/';
+  const SBKEY = 'sb_publishable_DRSMYoddn64gRy3dTa1ZZw_K3uWCB5K';
+  let TOK = '';
+  function token() {
+    if (TOK) return TOK;   /* 저장이 막힌 브라우저라도 이 페이지에서는 같은 표식을 쓴다 */
+    let t = ''; try { t = localStorage.getItem('rv-guest-token') || ''; } catch (x) {}
+    if (t.length < 20) {
+      const b = crypto.getRandomValues(new Uint8Array(24));
+      t = btoa(String.fromCharCode(...b)).replace(/[+/=]/g, c => ({ '+': '-', '/': '_', '=': '' })[c]);
+      try { localStorage.setItem('rv-guest-token', t); } catch (x) {}
     }
-    const i = a.findIndex(c => c.id === id); if (i < 0) throw new Error('없음');
-    if (method === 'PATCH') { if (body.text != null && !String(body.text).trim()) throw new Error('내용이 비었습니다'); Object.assign(a[i], body, { updated: new Date().toISOString() }); gsave(a); return a[i]; }
-    if (method === 'DELETE') { a.splice(i, 1); gsave(a); return { ok: true }; }
+    return (TOK = t);
+  }
+  async function rpc(fn, args) {
+    const r = await fetch(SB + fn, { method: 'POST', headers: { apikey: SBKEY, 'Content-Type': 'application/json' }, body: JSON.stringify({ p_token: token(), ...args }) });
+    if (!r.ok) throw new Error('저장하지 못했습니다(' + r.status + '). 잠시 뒤 다시 시도해 주세요.');
+    return r.json();
+  }
+  async function guestCall(method, url, body) {
+    const id = +((url.match(/\/g(\d+)$/) || [])[1] || 0);
+    if (method === 'GET') return rpc('cm_mine', {});
+    if (method === 'POST') return rpc('cm_add', { p: { ...body, author: guestName() } });
+    if (!id) throw new Error('없음');
+    if (method === 'PATCH') {
+      if (body.text == null) return S.items.find(c => c.id === 'g' + id);   /* 손님은 글만 고친다 */
+      if (!String(body.text).trim()) throw new Error('내용이 비었습니다');
+      return rpc('cm_edit', { p_id: id, p_text: body.text });
+    }
+    if (method === 'DELETE') return rpc('cm_del', { p_id: id });
+  }
+  /* 예전 방식(이 브라우저에만 저장)으로 남긴 코멘트가 있으면 한 번 올린다 */
+  async function migrateOld() {
+    let a = []; try { a = JSON.parse(localStorage.getItem('rv-guest-items') || '[]'); } catch (x) {}
+    if (!Array.isArray(a) || !a.length) return;
+    while (a.length) {   /* 한 건 올릴 때마다 지워 다시 와도 겹쳐 올리지 않는다 */
+      try { await rpc('cm_add', { p: { ...a[0], author: a[0].author || guestName() } }); } catch (x) { return; }
+      a.shift(); localStorage.setItem('rv-guest-items', JSON.stringify(a));
+    }
+    localStorage.removeItem('rv-guest-items');
   }
   function guestName() {
     let n = ''; try { n = localStorage.getItem('rv-guest-name') || ''; } catch (x) {}
@@ -123,7 +148,7 @@
     } });
     btnList = el('button', { type: 'button', 'aria-expanded': 'false', onclick: togglePanel });
     btnShow = el('button', { type: 'button', 'aria-pressed': 'true', onclick: () => { S.show = !S.show; btnShow.setAttribute('aria-pressed', S.show); btnShow.textContent = S.show ? '핀 숨기기' : '핀 보기'; render(); }, text: '핀 숨기기' });
-    bar = el('div', { id: 'rv-bar' }, GUEST ? [btnShow, btnList, el('button', { type: 'button', text: '보내기', onclick: sendOut }), btnMode] : [btnShow, btnList, btnMode]);
+    bar = el('div', { id: 'rv-bar' }, [btnShow, btnList, btnMode]);
     document.body.appendChild(bar);
     addEventListener('resize', render);
     addEventListener('keydown', e => {
@@ -291,29 +316,6 @@
     node.querySelector('button').focus();
   }
 
-  /* ---------- 손님 모드: 보내기 ---------- */
-  function sendOut() {
-    if (S.mode) setMode(false);
-    const items = gload();
-    const out = JSON.stringify({ from: (localStorage.getItem('rv-guest-name') || '손님'), site: location.origin + rootPath, at: new Date().toISOString(), items }, null, 1);
-    closePop();
-    const msg = el('div', { class: 'rv-txt', text: items.length ? `코멘트 ${items.length}건을 보냅니다. [복사]한 뒤 카카오톡 등에 붙여 넣거나, [파일 받기]로 내려받은 파일을 보내 주세요.` : '아직 남긴 코멘트가 없습니다.' });
-    const err = el('div', { class: 'rv-err', role: 'status' });
-    const row = el('div', { class: 'rv-row' }, [
-      el('button', { type: 'button', text: '닫기', onclick: closePop }),
-      el('button', { type: 'button', text: '파일 받기', onclick: () => {
-        const a = el('a', { href: URL.createObjectURL(new Blob([out], { type: 'application/json' })), download: '포트폴리오_코멘트.json' });
-        document.body.appendChild(a); a.click(); a.remove(); err.textContent = '내려받았습니다.';
-      } }),
-      el('button', { type: 'button', class: 'rv-pri', text: '복사', onclick: async () => {
-        try { await navigator.clipboard.writeText(out); err.textContent = '복사했습니다. 붙여 넣어 보내 주세요.'; }
-        catch (x) { err.textContent = '복사하지 못했습니다. [파일 받기]를 써 주세요.'; }
-      } })]);
-    const node = el('div', { class: 'rv-pop', role: 'dialog', 'aria-label': '코멘트 보내기' }, [el('div', { class: 'rv-meta', text: '보내기' }), msg, err, row]);
-    S.pop = { id: null, node, opener: null, at: { x: docW() - 330, y: scrollY + innerHeight - 260 } };
-    placePop(); node.querySelector('.rv-pri').focus();
-  }
-
   /* ---------- 목록 ---------- */
   function togglePanel() { S.panel = !S.panel; btnList.setAttribute('aria-expanded', S.panel); renderPanel(); }
   const pageName = pg => pg === '/' ? '메인' : pg.replace(/^\/cases\//, '사례 · ').replace(/\.html$/, '');
@@ -345,19 +347,27 @@
 
   /* ---------- 시작: 서버가 있을 때만 ---------- */
   if (!LOCAL && !GUEST) return; /* 배포본에서는 ?review 로 연 손님만 쓴다(서버 요청 없음) */
-  (GUEST ? Promise.resolve(gload()) : fetch(API, { cache: 'no-store' }).then(r => r.ok ? r.json() : Promise.reject())).then(items => {
+  (GUEST ? migrateOld().then(() => guestCall('GET', API)) : fetch(API, { cache: 'no-store' }).then(r => r.ok ? r.json() : Promise.reject())).then(items => {
     if (!Array.isArray(items)) return;
     S.items = items; mount(); render();
-    if (GUEST && !localStorage.getItem('rv-guest-seen')) { /* 손님 첫 방문: 쓰는 법 한 번 보여 준다 */
-      localStorage.setItem('rv-guest-seen', '1');
+    let seen = true, kept = true;
+    if (GUEST) try { seen = !!localStorage.getItem('rv-guest-seen2'); localStorage.setItem('rv-guest-seen2', '1'); kept = localStorage.getItem('rv-guest-token') === token(); } catch (x) { seen = false; kept = false; }
+    if (GUEST && !seen) { /* 손님 첫 방문: 쓰는 법 한 번 보여 준다 */
       const node = el('div', { class: 'rv-pop', role: 'dialog', 'aria-label': '코멘트 남기는 법' }, [
         el('div', { class: 'rv-meta', text: '코멘트 남기는 법' }),
-        el('div', { class: 'rv-txt', text: '1. 오른쪽 아래 [코멘트 남기기](또는 C키)를 켭니다.\n2. 고칠 곳을 누르면 점, 끌면 영역 코멘트가 됩니다.\n3. 핀을 누르면 고치기·삭제할 수 있습니다. 사례 페이지를 오가며 남겨도 됩니다.\n4. 다 남기면 [보내기]에서 복사하거나 파일로 받아 전해 주세요.\n코멘트는 이 브라우저에만 저장됩니다.' }),
+        kept ? null : el('div', { class: 'rv-err', text: '이 브라우저는 저장이 막혀 있어, 다른 페이지로 가거나 새로 고치면 남긴 코멘트를 다시 고칠 수 없습니다(코멘트는 전달됩니다).' }),
+        el('div', { class: 'rv-txt', text: '1. 오른쪽 아래 [코멘트 남기기](또는 C키)를 켭니다.\n2. 고칠 곳을 누르면 점, 끌면 영역 코멘트가 됩니다.\n3. 핀을 누르면 고치기·삭제할 수 있습니다. 사례 페이지를 오가며 남겨도 됩니다.\n남긴 코멘트는 바로 전달됩니다. 다른 사람의 코멘트는 보이지 않습니다.' }),
         el('div', { class: 'rv-row' }, [el('button', { type: 'button', class: 'rv-pri', text: '알겠어요', onclick: closePop })])]);
       S.pop = { id: null, node, opener: null, at: { x: docW() - 330, y: scrollY + innerHeight - 330 } };
       placePop(); node.querySelector('button').focus();
     }
     const m = location.hash.match(/rv=([cg]\d+)/);
     if (m) setTimeout(() => jump(m[1]), 400); /* 이미지가 자리 잡은 뒤 */
-  }).catch(() => { /* 정적 배포본: 코멘트 없음 */ });
+  }).catch(e => {
+    if (!GUEST) return; /* 정적 배포본: 코멘트 없음 */
+    const n = el('div', { class: 'rv-pop', role: 'alert', style: 'position:fixed;right:16px;bottom:16px' }, [
+      el('div', { class: 'rv-txt', text: '코멘트 기능을 불러오지 못했습니다. 인터넷 연결을 확인한 뒤 다시 시도해 주세요.' }),
+      el('div', { class: 'rv-row' }, [el('button', { type: 'button', class: 'rv-pri', text: '다시 시도', onclick: () => location.reload() })])]);
+    document.body.appendChild(n);
+  });
 })();
