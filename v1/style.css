@@ -1,0 +1,208 @@
+:root{--red:#141318;--paper:#EDECE9;--g1:#F06B3B;--g2:#8A5CF2;--g3:#3B7BF2;--g4:#D865E6;--ink:#141318;--dim:#8a8a8a;--line:#e6e6e6;--board:#ececec;
+ --mono:ui-monospace,"SF Mono",Menlo,Consolas,monospace;
+ --sans:"Pretendard Variable",Pretendard,-apple-system,"Apple SD Gothic Neo",sans-serif}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{font-family:var(--sans);color:var(--ink);background:#fff;-webkit-font-smoothing:antialiased;letter-spacing:-.01em}
+/* 한국어 줄바꿈: 낱말 중간에서 끊지 않고(keep-all), 마지막 줄에 한 낱말만 남지 않게(pretty) */
+body{word-break:keep-all;overflow-wrap:break-word}
+p,dd,small,li{text-wrap:pretty}h1,h2,h3,.lead,.pmeta p{text-wrap:balance}
+a{color:inherit;text-decoration:none}
+img{display:block;max-width:100%}
+.mono{font-family:var(--mono);font-size:12px;letter-spacing:.08em;text-transform:uppercase;line-height:1.5}
+.wrap{max-width:1280px;margin:0 auto;padding:0 48px}
+.tbd{color:#b5b5b5}
+
+/* ── 표지 컨셉: Blur → Grid → Form (portfolio-cover 원본 이식) ── */
+.cv{--col:8.3333cqw;position:relative;aspect-ratio:16/9;width:100%;overflow:hidden;container-type:inline-size;background:var(--paper);color:var(--ink)}
+.cv > *{position:absolute;margin:0}
+.cv .field{left:-12cqw;top:-20%;width:var(--fw,64cqw);height:140%;filter:blur(5.5cqw) saturate(var(--sat,1));opacity:var(--fo,.88);
+  background:radial-gradient(closest-side at 62% 34%,var(--g1),transparent),radial-gradient(closest-side at 40% 70%,var(--g2),transparent),
+  radial-gradient(closest-side at 74% 80%,var(--g3),transparent),radial-gradient(closest-side at 34% 22%,#F4C59A,transparent);
+  -webkit-mask-image:linear-gradient(90deg,#000 45%,transparent 100%);mask-image:linear-gradient(90deg,#000 45%,transparent 100%)}
+/* 눈금: 반복 그라데이션은 칸 폭이 소수 px 이면 큰 화면에서 선이 사라져, 칸마다 1px 막대를 따로 둔다 */
+.cv .ticks{left:0;right:0;height:max(8px,.8cqw);opacity:.6}
+.cv .ticks i{position:absolute;top:0;bottom:0;left:round(calc(var(--col)*var(--i)),1px);width:1px;background:var(--ink)}
+@supports not (width:round(1px,1px)){.cv .ticks i{left:calc(var(--col)*var(--i))}}
+.cv .ticks i:last-child{left:auto;right:0}
+.cv .ticks.t{top:1.5cqw}.cv .ticks.b{bottom:1.5cqw}
+.cv .m{font-family:"IBM Plex Mono",var(--mono);font-size:1.2cqw;letter-spacing:.08em;text-transform:uppercase;line-height:1.55}
+.cv .m b{display:block;font-family:var(--sans);font-weight:600;font-size:1.6cqw;letter-spacing:.01em;text-transform:none}
+.cv .tl{left:var(--col);top:7.5%}.cv .tr{right:var(--col);top:7.5%;text-align:right}
+.cv .bl{left:var(--col);bottom:7.5%}.cv .br{right:var(--col);bottom:7.5%;text-align:right}
+.cv .base{left:0;right:0;height:0;border-top:1px solid var(--ink)}
+.cv .ko{left:var(--col);font-family:"Noto Serif KR",serif;font-weight:400;font-size:1.7cqw;letter-spacing:-.01em}
+/* 줄무늬는 정수 픽셀로 스냅하고, 막대와 틈을 비슷한 폭으로 둬 긁힌 선이 아니라 의도한 줄무늬로 읽히게 한다 */
+.cv{--sp:calc(var(--col)/8);--sb:calc(var(--col)/8*.55)}
+@supports (width:round(1px,1px)){.cv{--sp:round(calc(var(--col)/8),1px);--sb:round(calc(var(--col)/8*.55),1px)}}
+/* --t(0→1)가 번짐 구간 중심 --x를 단어 왼쪽 끝→오른쪽 끝으로 옮긴다. 0이면 정적 표지와 같다 */
+@property --t{syntax:"<number>";inherits:true;initial-value:0}
+.cv .word{left:var(--col);display:grid;font-family:"Bodoni Moda",Didot,Georgia,serif;font-weight:500;line-height:1;letter-spacing:-.02em;white-space:nowrap;--x:calc(var(--t)*100%);--bi:max(0%,calc(var(--b1) - 6%));
+  --band:linear-gradient(90deg,transparent calc(var(--x) - var(--c2)),#000 calc(var(--x) - var(--c1)),#000 calc(var(--x) - var(--b2)),transparent calc(var(--x) - var(--bi)),transparent calc(var(--x) + var(--bi)),#000 calc(var(--x) + var(--b2)),#000 calc(var(--x) + var(--c1)),transparent calc(var(--x) + var(--c2)))}
+@supports (width:round(1px,1px)){.cv .word{left:round(var(--col),1px)}}
+.word span{grid-area:1/1;display:block}
+.word .l1,.word .l2{background:linear-gradient(100deg,var(--g1) 0%,#F29A63 18%,var(--g2) 42%,var(--g3) 62%,var(--g4) 85%);-webkit-background-clip:text;background-clip:text;color:transparent}
+.word .l1{filter:blur(var(--blur,.22cqw));
+  --m1:linear-gradient(90deg,transparent calc(var(--x) - var(--b2)),#000 calc(var(--x) - var(--b1)),#000 calc(var(--x) + var(--b1)),transparent calc(var(--x) + var(--b2)));
+  -webkit-mask-image:var(--m1);mask-image:var(--m1)}
+.word .l2{--st:repeating-linear-gradient(90deg,#000 0 var(--sb),transparent var(--sb) var(--sp));
+  -webkit-mask-image:var(--st),var(--band);-webkit-mask-composite:source-in;
+  mask-image:var(--st),var(--band);mask-composite:intersect}
+.word .l3{color:var(--ink);
+  --m3:linear-gradient(90deg,#000 calc(var(--x) - var(--c2)),transparent calc(var(--x) - var(--c1)),transparent calc(var(--x) + var(--c1)),#000 calc(var(--x) + var(--c2)));
+  -webkit-mask-image:var(--m3);mask-image:var(--m3)}
+/* 메인 표지: 뒤 원과 번짐 구간이 좌→우→좌로 함께 이동 */
+.hero{--sat:.85;--sweep:66cqw}
+.hero .field{transform:translateX(calc(var(--t) * var(--sweep)));
+  -webkit-mask-image:radial-gradient(closest-side,#000 55%,transparent 100%);mask-image:radial-gradient(closest-side,#000 55%,transparent 100%)}
+@keyframes sweep{from{--t:0}to{--t:1}}
+.hero.live{animation:sweep 14s cubic-bezier(.45,0,.55,1) infinite alternate}
+.hero.live.off{animation-play-state:paused}
+.hero .word{top:27%;font-size:17.6cqw;--b1:14%;--b2:36%;--c1:50%;--c2:70%}
+.hero.live .word{--b1:9%;--b2:22%;--c1:32%;--c2:46%}
+@media (prefers-reduced-motion:reduce){.hero.live{animation:none}}
+.hero .base{top:calc(27% + 15.175cqw)}
+/* 기준선은 글자 바탕선(Bodoni Moda 17.6cqw 의 바탕선 = 글자 위 15.175cqw)에 맞추고 정수 px 로 내림 없이 올림해 획을 가로지르지 않게 한다 */
+@supports (top:round(up,1px,1px)){.hero .base{top:round(up,calc(27% + 15.175cqw),1px)}}
+.hero .ko{top:calc(27% + 18.3cqw)}
+
+/* ── 사례 탭 + 목록 ── */
+.cases{background:#fff;padding:120px 48px 40px;max-width:1376px;margin:0 auto}
+.tabs{display:flex;flex-wrap:wrap;gap:20px 28px;border-bottom:1px solid var(--line);padding-bottom:16px}
+.tab{all:unset;cursor:pointer;display:flex;flex-direction:column;gap:4px;padding:4px 0;font-family:var(--mono);text-transform:uppercase;color:var(--dim);border-bottom:2px solid transparent;margin-bottom:-18px;padding-bottom:16px}
+.tab b{font-size:13px;letter-spacing:.06em;font-weight:500}
+.tab span{display:none}
+.tab:hover{color:var(--ink)}
+.tab.on{color:var(--ink);border-bottom-color:var(--ink)}
+.tab:focus-visible{outline:2px solid var(--ink);outline-offset:4px}
+.cap{color:var(--dim);margin:20px 0 32px}
+.panel{display:none;grid-template-columns:300px 1fr;gap:40px}
+.panel.on{display:grid}
+.panel.etc.on{display:block}
+.panel.etc .grid{margin-top:32px}
+.pmeta{display:flex;flex-direction:column;gap:16px;padding-top:8px}
+.pmeta h3{font-size:28px;font-weight:700;letter-spacing:-.04em}
+.pmeta p{font-size:16px;line-height:1.6;color:#555}
+.more-d{grid-column:1/-1;border-top:1px solid var(--line);margin-top:8px}
+.more-d>summary{cursor:pointer;list-style:none;display:flex;justify-content:space-between;align-items:center;padding:20px 0;font-weight:600;font-size:16px}
+.more-d>summary::-webkit-details-marker{display:none}
+.more-d>summary::after{content:"";width:10px;height:10px;border-right:2px solid var(--ink);border-bottom:2px solid var(--ink);transform:rotate(45deg);transition:transform .2s;margin-right:6px}
+.more-d[open]>summary::after{transform:rotate(-135deg)}
+.more-d>summary:focus-visible{outline:2px solid var(--ink);outline-offset:4px}
+.case-in{padding:16px 0 40px}
+.case-in .meta{margin-bottom:56px}.case-in .story{margin-bottom:72px}
+.more{margin-top:8px;font-weight:600;border-bottom:1px solid var(--ink);align-self:flex-start;padding-bottom:2px}
+.pshots{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;align-items:start}
+.pshots figure{background:#f5f5f4;border-radius:8px;overflow:hidden;max-height:520px;border:1px solid var(--line)}
+.pshots img{width:100%;object-fit:cover;object-position:top}
+
+/* ── 흰 영역 공통 ── */
+.white{padding-top:140px;padding-bottom:40px}
+.label{color:var(--dim);margin-bottom:24px}
+.big{font-size:clamp(26px,2.6vw,36px);font-weight:500;line-height:1.35;letter-spacing:-.035em;max-width:880px}
+.big.dim{color:var(--dim);margin-top:24px}
+.about .tbd{margin-top:40px}
+.about{padding-bottom:160px}
+.grid{margin-top:56px;display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:40px 24px}
+.g{display:flex;flex-direction:column;gap:12px}
+.g img{aspect-ratio:3/4;object-fit:cover;object-position:top;background:var(--board);border-radius:10px;transition:transform .3s}
+.g:hover img{transform:translateY(-4px)}
+.g span{font-size:14px;font-weight:600}
+
+/* ── 사례 상세: 흰 타이포 ── */
+.case{background:#fff}
+.cnav{position:sticky;top:0;z-index:5;background:rgba(255,255,255,.92);backdrop-filter:blur(8px);display:flex;align-items:center;justify-content:space-between;padding:20px 48px}
+.mark{width:44px;height:44px;background:var(--ink);color:#fff;border-radius:8px;display:grid;place-items:center;font-size:26px}
+.mark:hover{opacity:.7}
+.chead{margin:96px 0 64px;max-width:900px}
+.chead .mono{color:var(--dim)}
+.chead h1{font-size:clamp(40px,5vw,64px);font-weight:700;letter-spacing:-.045em;line-height:1.1;margin:16px 0 24px}
+.lead{font-size:clamp(20px,2vw,26px);font-weight:400;line-height:1.5;letter-spacing:-.03em;color:#444}
+.meta{display:grid;grid-template-columns:repeat(4,1fr);gap:24px;border-top:1px solid var(--line);padding-top:24px;margin-bottom:96px}
+.meta dt{font-family:var(--mono);font-size:11px;letter-spacing:.08em;color:var(--dim);margin-bottom:8px}
+.meta dd{font-size:16px;line-height:1.5}
+/* 문제·판단·결과는 위아래로 쌓아 한 줄을 길게 둔다(직접 나눈 줄이 좁은 칸에서 다시 꺾이지 않게) */
+.story{display:grid;grid-template-columns:1fr;gap:0;margin-bottom:140px;border-top:1px solid var(--line)}
+.story > div{display:grid;grid-template-columns:180px minmax(0,1fr);gap:24px;padding:28px 0;border-bottom:1px solid var(--line)}
+.story .mono{color:var(--dim);margin:6px 0 0}
+.story p:not(.mono){font-size:19px;line-height:1.7;letter-spacing:-.025em;max-width:46em}
+.step{display:grid;grid-template-columns:280px 1fr;gap:40px;padding:56px 0;border-top:1px solid var(--line)}
+.sh{position:sticky;top:100px;align-self:start}
+.sh .mono{color:var(--red);font-weight:700}
+.sh h3{font-size:26px;font-weight:700;letter-spacing:-.04em;margin:8px 0 12px}
+.sh p{font-size:15px;line-height:1.65;color:#555}
+.shots{display:grid;gap:16px;align-items:start}
+.shots.n1{grid-template-columns:1fr}
+.shots.n2{grid-template-columns:repeat(2,1fr)}
+.shots.n3{grid-template-columns:repeat(3,1fr)}
+.shots.n4{grid-template-columns:repeat(4,1fr)}
+.shot{background:#f5f5f4;border-radius:8px;overflow:hidden;border:1px solid var(--line);cursor:zoom-in}
+.shot.wide{grid-column:1/-1}
+.shot.tall img{max-height:900px;object-fit:cover;object-position:top}
+.shot img{width:100%}
+.nextcase{display:block;border-top:1px solid var(--ink);margin:120px 0 0;padding:40px 0 120px;font-size:clamp(32px,5vw,72px);font-weight:800;letter-spacing:-.05em}
+.nextcase .mono{display:block;color:var(--dim);margin-bottom:12px;font-weight:400}
+.nextcase:hover{opacity:.6}
+
+/* ── 라이트박스 ── */
+.lb{position:fixed;inset:0;z-index:50;background:rgba(10,10,10,.92);overflow:auto;display:flex;justify-content:center;padding:48px}
+.lb[hidden]{display:none}
+.lb img{max-width:min(1400px,100%);height:auto;align-self:flex-start;border-radius:6px}
+.lb button{position:fixed;top:20px;right:24px;background:#fff;border:0;border-radius:6px;padding:10px 14px;font:700 12px var(--mono);cursor:pointer}
+
+@media (max-width:900px){
+ .wrap{padding:0 22px}
+
+ .hero{aspect-ratio:4/5;--sweep:60cqw}
+ .hero .word{top:36%;font-size:17.6cqw}
+ .hero .base{top:calc(36% + 15.175cqw)}
+ @supports (top:round(up,1px,1px)){.hero .base{top:round(up,calc(36% + 15.175cqw),1px)}}
+ .hero .ko{top:calc(36% + 19cqw);font-size:4.4cqw;right:var(--col)}
+ .cv .m{font-size:2.9cqw}.cv .m b{font-size:4.2cqw}
+ .cv .tl,.cv .tr{top:6%}.cv .bl,.cv .br{bottom:6%}
+ .cases{padding:72px 22px 24px}
+ .tabs{gap:10px 18px}.tab{margin-bottom:0;padding-bottom:6px}
+ .panel.on{display:block}.more-d{margin-top:24px}.pmeta{margin-bottom:24px}
+ .pshots{grid-template-columns:1fr 1fr}.pshots figure:nth-child(3){display:none}
+ .cnav{padding:14px 22px}.cnav>span{display:none}
+ .chead{margin:48px 0 40px}
+ .meta{grid-template-columns:1fr 1fr}
+ .story{margin-bottom:80px}.story > div{grid-template-columns:1fr;gap:10px;padding:22px 0}.story p:not(.mono){font-size:17px}
+ .step{grid-template-columns:1fr;gap:20px}.sh{position:static}
+ .shots.n3,.shots.n4{grid-template-columns:repeat(2,1fr)}
+}
+
+/* ── 이전·다음 사례 ── */
+.pager{grid-column:1/-1;display:grid;grid-template-columns:1fr 1fr;gap:24px;border-top:1px solid var(--ink);margin-top:80px}
+.pager .nextcase{all:unset;cursor:pointer;display:block;padding:40px 0 80px;font-size:clamp(28px,4vw,56px);font-weight:800;letter-spacing:-.05em;line-height:1.1}
+.pager .nextcase:not(.prev){text-align:right}
+.pager .nextcase .mono{display:block;color:var(--dim);margin-bottom:12px;font-weight:400}
+.pager .nextcase:hover{opacity:.6}
+.pager .nextcase:focus-visible{outline:2px solid var(--ink);outline-offset:4px}
+.about .contact{margin-top:40px;display:flex;gap:16px;align-items:baseline;font-size:20px}
+.about .contact .mono{color:var(--dim)}
+.g{position:relative}
+.g .badge{position:absolute;top:10px;left:10px;font:500 11px/1 var(--mono);letter-spacing:.06em;font-style:normal;background:var(--ink);color:#fff;padding:6px 8px;border-radius:999px}
+.g small{font-size:12px;color:var(--dim);line-height:1.5;margin-top:-6px}
+/* 대표 목업·작게 보기 (2026-11-09) */
+.pshots.one{grid-template-columns:1fr}
+.pshots figure.mock{background:none;border:0;border-radius:12px;max-height:none}
+.step.mock .shots{max-width:620px}
+.step.mock .shot,.step.small .shot{border:0;background:none}
+.shots.n1 .shot.tall{max-width:300px}
+.shots.n1 .shot.tall img{max-height:none}
+@media (max-width:900px){.pshots.one{grid-template-columns:1fr}}
+.g img{aspect-ratio:4/3;object-fit:contain;background:#F3F2EF}
+.lb img{max-width:min(1100px,100%)}
+.step.small .shot img{width:auto;max-width:100%;max-height:760px;object-fit:cover;object-position:top}
+.pshots figure.mock img{max-height:520px;width:100%;object-fit:contain;background:#F3F2EF}
+/* ABOUT 소개 문장: 크게 키우지 않고 단정하게 (c068) */
+.about .big.dim{font-size:clamp(17px,1.35vw,20px);line-height:1.8;letter-spacing:-.015em;font-weight:400;color:#6b6b6b;max-width:560px;margin-top:28px}
+.about .contact{font-size:16px;flex-wrap:wrap;gap:10px 16px}
+.about .contact .mono:not(:first-child){margin-left:16px}
+/* 화면 무더기·대외비 문서 (c079~c084) */
+.step.wall .shot,.step.doc .shot{border:0;background:none;border-radius:10px}
+.step.wall .shots{grid-template-columns:1fr}
+.step.wall .shot img{width:auto;max-width:100%;height:auto}
+.step.doc .shot img{max-height:560px;width:100%;object-fit:cover;object-position:top}
+.step.half .shot img{max-width:60%}
